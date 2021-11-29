@@ -28,7 +28,7 @@
     
     self.view.backgroundColor = [UIColor blackColor];
     
-    self.title = [NSString stringWithFormat:@"native 支持横竖屏切换 - %@",self.continuous ? @"连续扫码" : @"不连续扫码"];
+//    self.title = [NSString stringWithFormat:@"native 支持横竖屏切换 - %@",self.continuous ? @"连续扫码" : @"不连续扫码"];
     
     
     

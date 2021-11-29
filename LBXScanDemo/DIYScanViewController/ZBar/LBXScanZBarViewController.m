@@ -26,7 +26,7 @@
     
     self.view.backgroundColor = [UIColor blackColor];
     
-    self.title = [NSString stringWithFormat:@"ZBar,不支持横屏 - %@",self.continuous ? @"连续扫码" : @"不连续扫码"];
+//    self.title = [NSString stringWithFormat:@"ZBar,不支持横屏 - %@",self.continuous ? @"连续扫码" : @"不连续扫码"];
 
     
     [self drawScanView];
