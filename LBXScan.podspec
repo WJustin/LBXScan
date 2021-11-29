@@ -1,12 +1,12 @@
 Pod::Spec.new do |s|
     s.name         = 'LBXScan'
-    s.version      = '2.5.1'
+    s.version      = '2.5.2'
     s.summary      = 'ios scan wrapper'
-    s.homepage     = 'https://github.com/MxABC/LBXScan'
+    s.homepage     = 'https://github.com/WJustin/LBXScan'
     s.license      = 'MIT'
     s.authors      = {'lbxia' => 'lbxia20091227@foxmail.com'}
     s.platform     = :ios, '8.0'
-    s.source       = {:git => 'https://github.com/MxABC/LBXScan.git', :tag => s.version}
+    s.source       = {:git => 'https://github.com/WJustin/LBXScan.git', :tag => s.version}
     s.requires_arc = true
     s.prefix_header_contents = '#import <Foundation/Foundation.h>'
 

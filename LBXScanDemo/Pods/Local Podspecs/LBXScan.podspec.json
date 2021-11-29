@@ -1,6 +1,6 @@
 {
   "name": "LBXScan",
-  "version": "2.4.1",
+  "version": "2.5.1",
   "summary": "ios scan wrapper",
   "homepage": "https://github.com/MxABC/LBXScan",
   "license": "MIT",
@@ -8,11 +8,11 @@
     "lbxia": "lbxia20091227@foxmail.com"
   },
   "platforms": {
-    "ios": "7.0"
+    "ios": "8.0"
   },
   "source": {
     "git": "https://github.com/MxABC/LBXScan.git",
-    "tag": "2.4.1"
+    "tag": "2.5.1"
   },
   "requires_arc": true,
   "prefix_header_contents": "#import <Foundation/Foundation.h>",

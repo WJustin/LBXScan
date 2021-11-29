@@ -23,6 +23,7 @@
 #import "ZXHybridBinarizer.h"
 #import "ZXReader.h"
 #import "ZXResult.h"
+#import "ZXResultPoint.h"
 
 @interface LBXZXCapture ()
 
@@ -38,8 +39,11 @@
 @property (nonatomic, assign) int orderOutSkip;
 @property (nonatomic, assign) BOOL onScreen;
 @property (nonatomic, strong) AVCaptureVideoDataOutput *output;
+//@property(nonatomic,strong)  AVCaptureStillImageOutput *stillImageOutput;//拍照
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, strong) AVCaptureSession *session;
+@property (nonatomic, assign) BOOL bHadAutoVideoZoom;
+
 @end
 
 @implementation LBXZXCapture
@@ -65,6 +69,7 @@
     _sessionPreset = AVCaptureSessionPresetHigh;
     _transform = CGAffineTransformIdentity;
     _scanRect = CGRectZero;
+    _bHadAutoVideoZoom = NO;
   }
 
   return self;
@@ -99,6 +104,7 @@
 //        layer.affineTransform = self.transform;
 //        layer.delegate = self;
 //        layer.videoGravity = AVLayerVideoGravityResizeAspect;
+        layer.backgroundColor = [UIColor blackColor].CGColor;
         layer.videoGravity = AVLayerVideoGravityResizeAspectFill;
         
         _layer = layer;
@@ -120,6 +126,18 @@
     
     return _output;
 }
+
+//- (AVCaptureStillImageOutput *)stillImageOutput {
+//    if (!_stillImageOutput) {
+//        _stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+//        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys:
+//                                        AVVideoCodecJPEG, AVVideoCodecKey,
+//                                        nil];
+//        [_stillImageOutput setOutputSettings:outputSettings];
+//        [self.session addOutput:_stillImageOutput];
+//    }
+//    return _stillImageOutput;
+//}
 
 #pragma mark - Property Setters
 
@@ -296,6 +314,7 @@
     
     if (self.delegate || self.luminanceLayer || self.binaryLayer) {
         (void)[self output];
+//        (void)[self stillImageOutput];
     }
     
     if (!self.session.running) {
@@ -457,44 +476,68 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 
                 NSError *error;
                 ZXResult *result = [self.reader decode:bitmap hints:self.hints error:&error];
+                if (error || !result) {
+                    ZXGlobalHistogramBinarizer *gBinarizer = [[ZXGlobalHistogramBinarizer alloc] initWithSource:self.invert ? [source invert] : source];
+                    bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:gBinarizer];
+                    result = [self.reader decode:bitmap hints:self.hints error:&error];
+
+                }
                 if (result) {
-                    //            CGImageRef iOffscreen = CGBitmapContextCreateImage(context);
-                    
-                    
-                    //            NSLog(@"%@",result.resultPoints);
-                    
+//                    if (result.resultPoints.count >= 3 && !_bHadAutoVideoZoom) {
+//                        ZXResultPoint *topLeftPoint = result.resultPoints[0];
+//                        ZXResultPoint *bottomRightPoint = result.resultPoints[2];
+//                        CGFloat widthOffset = bottomRightPoint.x - topLeftPoint.x;
+//                        CGFloat heightOffset = bottomRightPoint.y - topLeftPoint.y;
+//                        CGFloat scaleX = 150 / widthOffset;
+//                        CGFloat scaleY = scaleX;
+//
+//                        if (scaleX > 1) {
+//                            [_input.device lockForConfiguration:nil];
+//                            AVCaptureConnection *videoConnection = [self connectionWithMediaType:AVMediaTypeVideo fromConnections:[self.stillImageOutput connections]];
+//                            CGFloat maxScaleAndCropFactor = ([[self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo] videoMaxScaleAndCropFactor])/16;
+//                            if (scaleX > maxScaleAndCropFactor)
+//                                scaleX = maxScaleAndCropFactor;
+//
+//                            CGFloat zoomX = scaleX / videoConnection.videoScaleAndCropFactor;
+//                            CGFloat zoomY = scaleY / videoConnection.videoScaleAndCropFactor;
+//
+//                            videoConnection.videoScaleAndCropFactor = scaleX;
+//
+//                            [_input.device unlockForConfiguration];
+//
+//                            dispatch_async(dispatch_get_main_queue(), ^{
+//                                [CATransaction begin];
+//                                [CATransaction setAnimationDuration:.025];
+//                                self.rootView.transform = CGAffineTransformMakeScale(scaleX, scaleY);
+//                                [CATransaction commit];
+//                            });
+//                            _bHadAutoVideoZoom = YES;
+//                            return;
+//                        }
+//                    }
+//
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        UIImage* image = [UIImage imageWithCGImage: self.lastScannedImage];
+                        UIImage* image = [UIImage imageWithCGImage:self.lastScannedImage];
                         [self.delegate captureResult:self result:result scanImage:image];
                     });
+                } else {
+                    
                 }
             }
         }
     }
 }
 
-//+ (ZXResult *)regocnizeImage:(UIImage*)image
-//{
-//    ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage:image.CGImage];
-//    
-//    ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
-//    
-//    ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
-//    
-//    NSError *error;
-//    
-//    id<ZXReader> reader;
-//    
-//    if (NSClassFromString(@"ZXMultiFormatReader")) {
-//        reader = [NSClassFromString(@"ZXMultiFormatReader") performSelector:@selector(reader)];
-//    }
-//    
-//    ZXDecodeHints *_hints = [ZXDecodeHints hints];
-//    ZXResult *result = [reader decode:bitmap hints:_hints error:&error];
-//    
-//    return result;
-//}
-
+- (AVCaptureConnection *)connectionWithMediaType:(NSString *)mediaType fromConnections:(NSArray *)connections {
+    for (AVCaptureConnection *connection in connections ) {
+        for (AVCaptureInputPort *port in [connection inputPorts] ) {
+            if ([[port mediaType] isEqual:mediaType]) {
+                return connection;
+            }
+        }
+    }
+    return nil;
+}
 
 #pragma mark - Private
 
